@@ -6,7 +6,7 @@ Compile it using the following command:
 and then
 	./a.out(name of the executable) no_of_rows/datapoints no_of_columns/dimensions no_of_clusters maximum_iterations no_of_threads
 
-	The no_of_threads should be equal to the number of cores you have. It works out the best in that case.
+	The no_of_threads should be equal to the number of cores you have. It works out the best in that case.	
 Team:
 1. Akshar Varma
 2. Yashwant Keswani
