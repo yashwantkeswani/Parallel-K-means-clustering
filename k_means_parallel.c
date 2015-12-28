@@ -105,7 +105,7 @@ int *allocate_initial_centroids(double **data_points_normalized, int no_of_rows,
   return indices;
 }
 
-int *cluster(double **data_points_normalized,int *initial_centroids,int no_of_rows,int no_of_columns,int no_of_clusters){
+int *cluster(double **data_points_normalized,int *initial_centroids,int no_of_rows,int no_of_columns,int no_of_clusters, int max_iterations){
   int i,j;
   int *labels=(int *)malloc(no_of_rows*sizeof(int));
   int *points_in_each_cluster=(int *)malloc(no_of_clusters*sizeof(int));
@@ -125,7 +125,7 @@ int *cluster(double **data_points_normalized,int *initial_centroids,int no_of_ro
   int re_assignments=100;
   double error;
   int count=1;
-  while(re_assignments!=0){
+  while(re_assignments!=0 && max_iterations>0){
     double start = omp_get_wtime();
     clock_t cpu_start = clock();
     re_assignments=0;
@@ -180,6 +180,7 @@ int *cluster(double **data_points_normalized,int *initial_centroids,int no_of_ro
 		#pragma omp barrier
 		#pragma omp single
 		{
+			max_iterations-=1;
 			for(i=0;i<no_of_rows;i++)
 			{
 				labels[i]=temp_labels[i/n_rows][i%n_rows];		
@@ -324,8 +325,9 @@ void write_to_file(char *filename,int *labels,int no_of_rows){
 int main(int argc, char* argv[]){
   int i,j; //Iteration variables.
   int n=atoi(argv[1]);//No of points in the data set.
-  int dimensions=97;//Dimension of each point.
-  omp_set_num_threads(atoi(argv[3]));
+  int dimensions=atoi(argv[2]);//Dimension of each point.
+  int max_iterations=atoi(argv[4]); //The maximum number of iterations.
+  omp_set_num_threads(atoi(argv[5]));
 
   double **data_points=(double **)malloc(n*sizeof(double*));
   double *mean=(double *)malloc(dimensions*sizeof(double));
@@ -333,7 +335,7 @@ int main(int argc, char* argv[]){
   // double maxDI=-22;
   // int maxDIindex;
 
-  int seed=44242;//time(NULL);
+  int seed=time(NULL);
   printf("Seed: %d\n", seed);
   srand(seed);
 
@@ -365,12 +367,12 @@ int main(int argc, char* argv[]){
   printf("Done.\n"); 
 
 
-  int no_of_clusters=atoi(argv[2]);
+  int no_of_clusters=atoi(argv[3]);
   int *initial_centroids=(int *)malloc(no_of_clusters*sizeof(int));
   initial_centroids=allocate_initial_centroids(data_points_normalized,n,no_of_clusters);
   int *labels=(int *)malloc(n*sizeof(int));
   printf("Clustering.\n");
-  labels=cluster(data_points_normalized,initial_centroids,n,dimensions,no_of_clusters);
+  labels=cluster(data_points_normalized,initial_centroids,n,dimensions,no_of_clusters,max_iterations);
   printf("Done.\n");
   printf("Everything in: %.3f\n",omp_get_wtime()-start);
   start=omp_get_wtime();
